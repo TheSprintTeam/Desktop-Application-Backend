@@ -6,13 +6,15 @@ from .helper import PyObjectId
 
 # base model for users
 class UserBase(BaseModel):
-    #id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     email: str
     first_name: str
     last_name: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
     role_id: PyObjectId | None = None
+    # user_name: str
+    # ip_address: str
+    # user_password: str
 
     class Config:
         json_encoders = {ObjectId: str}
@@ -30,3 +32,8 @@ class UserBase(BaseModel):
 # additional model for creating a user
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
+
+# model for changing password
+class UserChangePass(BaseModel):
+    old_password: str
+    new_password: str

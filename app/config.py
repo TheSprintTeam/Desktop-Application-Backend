@@ -8,7 +8,7 @@ load_dotenv(find_dotenv())
 # Secret Key for Auth
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440 # 1 day expiration token
 
 # MongoDB Database
 MONGODB_URL = os.getenv("MONGODB_URL")

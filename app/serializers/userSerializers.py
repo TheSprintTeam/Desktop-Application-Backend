@@ -1,3 +1,4 @@
+# Base for a User Entity
 def userEntity(user) -> dict:
     return {
         "id": str(user["_id"]),
@@ -8,8 +9,12 @@ def userEntity(user) -> dict:
         "role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
+        #"user_name": user["user_name"],
+        #"ip_address": user["ip_address"],
+        #"user_password": user["user_password"]
     }
 
+# User Entity for Google (they have no password)
 def userEntityGoogle(user) -> dict:
     return {
         "id": str(user["_id"]),
@@ -19,8 +24,12 @@ def userEntityGoogle(user) -> dict:
         #"role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
+        #"user_name": user["user_name"],
+        #"ip_address": user["ip_address"],
+        #"user_password": user["user_password"]
     }
 
+# User Response Entity should return no password
 def userResponseEntity(user) -> dict:
     return {
         "id": str(user["_id"]),
@@ -30,7 +39,11 @@ def userResponseEntity(user) -> dict:
         "role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
+        #"user_name": user["user_name"],
+        #"ip_address": user["ip_address"],
+        #"user_password": user["user_password"]
     }
+
 
 def embeddedUserResponse(user) -> dict:
     return {

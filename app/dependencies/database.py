@@ -18,3 +18,32 @@ db = client["sprint"]
 # different collections
 users_collection = db["users"]
 users_collection.create_index("email", unique = True)
+
+teams_collection = db["teams"]
+
+
+# insert function
+def insert_data(collection_name, doc):
+    collection = db[collection_name]
+    try:
+        result = collection.insert_one(doc)
+        return result
+    except Exception as e:
+        return e
+    
+# find function
+def find_data(collection_name, field, doc):
+    collection = db[collection_name]
+    try:
+        result = collection.find_one({field: doc})
+        return result
+    except Exception as e:
+        return e
+    
+# delete function
+def delete_data(collection_name, field, doc):
+    collection = db[collection_name]
+    try:
+        collection.delete_one({field: doc})
+    except Exception as e:
+        return e
