@@ -3,9 +3,9 @@ from bson import ObjectId
 
 from ..dependencies.database import teams_collection, insert_data, find_data
 from fastapi import APIRouter, Response, Depends, HTTPException, status
-from .users import read_users_me
 from ..dependencies.security import get_current_user
 from ..models.team import TeamBase
+from ..models.user import UserBase
 from ..serializers.teamSerializers import teamResponseEntity
 
 
@@ -17,12 +17,12 @@ router = APIRouter(
 )
 
 # API Endpoint for Creating a Team (POST)
-@router.post("create_team")
-async def create_team(form_data: Annotated[TeamBase, Depends(get_current_user)]):
-    user = read_users_me()
+@router.post("/create_team")
+async def create_team(form_data: TeamBase, current_user: Annotated[UserBase, Depends(get_current_user)]):
+    user_id = current_user["id"]
 
     # Take Form Data and Create the Team
-    form_data.team_lead = ObjectId(user["id"])
+    form_data.team_lead = ObjectId(user_id)
     result = insert_data("teams", form_data.dict())
     if result is Exception:
         raise HTTPException(

@@ -1,9 +1,9 @@
 from typing import Annotated
 from datetime import datetime, timedelta
+from bson import ObjectId
 
 from fastapi import APIRouter, Response, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from bson import ObjectId
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 from ..models.token import Token
 from ..models.user import UserBase, UserCreate, UserChangePass
@@ -91,11 +91,11 @@ async def read_users_me(current_user: Annotated[UserBase, Depends(get_current_us
     return current_user
 
 # API Endpoint for Changing a User's password (PUT Request)
-@router.put("/change_password")
-async def change_password(form_data: Annotated[UserChangePass, Depends(get_current_user)]):
+@router.put("/change_password/")
+async def change_password(form_data: UserChangePass, current_user: Annotated[UserBase, Depends(get_current_user)]):
     # first verify the user put in the correct password in database
-    user = read_users_me()
-    check_password = authenticate_user(user["email"], form_data.old_password)
+    email = current_user["email"]
+    check_password = authenticate_user(email, form_data.old_password)
     if not check_password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -106,7 +106,7 @@ async def change_password(form_data: Annotated[UserChangePass, Depends(get_curre
     # hash the new password and update document
     hashed_password = get_password_hash(form_data.new_password)
     result = users_collection.update_one(
-        {"email": {user["email"]}},
+        {"email": {email}},
         {"$password": {hashed_password}}
     )
     if result.upserted_id is None:
@@ -118,9 +118,10 @@ async def change_password(form_data: Annotated[UserChangePass, Depends(get_curre
     return {"result": result.raw_result}
 
 # API Endpoint for Deleting a User's Account
-@router.delete("")
+@router.delete("/delete_user")
 async def delete_user(current_user: Annotated[UserBase, Depends(get_current_user)]):
-    result = delete_data("users", "_id", "id")
+    user_id = current_user["id"]
+    result = delete_data("users", "_id", ObjectId(user_id))
     if result is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

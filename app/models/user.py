@@ -7,8 +7,8 @@ from .helper import PyObjectId
 # base model for users
 class UserBase(BaseModel):
     email: str
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     role_id: PyObjectId | None = None
