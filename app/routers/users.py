@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 from ..models.token import Token
 from ..models.user import UserBase, UserCreate, UserChangePass
-from ..dependencies.database import users_collection, delete_data, insert_data, find_data
+from ..dependencies.database import delete_data, insert_data, find_data, update_data
 from ..dependencies.security import get_password_hash, get_current_user, authenticate_user, create_access_token
 from ..serializers.userSerializers import userResponseEntity
 
@@ -105,17 +105,17 @@ async def change_password(form_data: UserChangePass, current_user: Annotated[Use
 
     # hash the new password and update document
     hashed_password = get_password_hash(form_data.new_password)
-    result = users_collection.update_one(
-        {"email": {email}},
-        {"$password": {hashed_password}}
+    result = update_data(
+        {"email": email},
+        { "$set": {"password": hashed_password}}
     )
-    if result.upserted_id is None:
+    if result is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not update password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return {"result": result.raw_result}
+    return {"result": result}
 
 # API Endpoint for Deleting a User's Account
 @router.delete("/delete_user")

@@ -44,6 +44,16 @@ def find_data(collection_name, field, doc):
 def delete_data(collection_name, field, doc):
     collection = db[collection_name]
     try:
-        collection.delete_one({field: doc})
+        result = collection.delete_one({field: doc})
+        return result
+    except Exception as e:
+        return e
+    
+# update function
+def update_data(collection_name, query, new_values):
+    collection = db[collection_name]
+    try:
+        result = collection.update_one(query, new_values)
+        return result
     except Exception as e:
         return e
