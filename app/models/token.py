@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import HTTPException, status, Request
 from fastapi.security import OAuth2
 from fastapi.security.oauth2 import OAuth2, OAuthFlowsModel, get_authorization_scheme_param
+from .helper import PyObjectId
 
 # base model for token
 class Token(BaseModel):
@@ -11,6 +12,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+    id: PyObjectId | None = None
 
 # new model for the oauth2_scheme which includes cookies
 class OAuth2PasswordBearerCookie(OAuth2):

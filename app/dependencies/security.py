@@ -5,11 +5,14 @@ import google_auth_oauthlib.flow
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from bson import ObjectId
 
-from .database import find_data
+from .database import find_one_data, find_data
 from ..config import SECRET_KEY, ALGORITHM
 from ..models.token import TokenData, OAuth2PasswordBearerCookie
+from ..models.user import UserBase
 from ..serializers.userSerializers import userEntity, userEntityGoogle, userResponseEntity
+from ..serializers.teamSerializers import teamResponseEntity
 
 # Use the client_secret.json file to identify the application requesting authorization. The client ID (from that file) and access scopes are required.
 flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
@@ -39,10 +42,11 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_user(email: str):
-    result = find_data("users", "email", email)
-    if result != None:
+    result = find_one_data("users", {"email": email})
+    if result is not None:
         return result
-    
+    return None
+
 def authenticate_user(email: str, password: str):
     user = get_user(email)
     if not user:
@@ -90,3 +94,48 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return userResponseEntity(user)
+
+
+# helper functions for user/team stuff
+def get_all_user_teams(user_id):
+    users_teams = []
+
+    result_team_lead = find_data("teams",
+        {"$or": [
+            {"team_lead": user_id},
+            {"members": user_id}
+        ]})
+    if result_team_lead is not Exception:
+        for team in result_team_lead:
+            users_teams.append(teamResponseEntity(team))
+
+    if users_teams is not None:
+        return users_teams
+    return None
+
+async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
+    user_id = current_user["id"]
+    result = find_one_data("teams",
+        {"$and": [
+            {"_id": ObjectId(team_id)},
+            {"$or": [
+                {"team_lead": ObjectId(user_id)},
+                {"members": ObjectId(user_id)}
+            ]}
+        ]})
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User is not in this team team",
+        )
+    return teamResponseEntity(result)
+
+async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_user)]):
+    user_id = current_user["id"]
+    teams = get_all_user_teams(ObjectId(user_id))
+    if teams is None:
+        raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail="User is not in any teams",
+    )
+    return teams

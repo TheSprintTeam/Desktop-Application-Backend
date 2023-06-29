@@ -7,8 +7,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 from ..models.token import Token
 from ..models.user import UserBase, UserCreate, UserChangePass
-from ..dependencies.database import delete_data, insert_data, find_data, update_data
-from ..dependencies.security import get_password_hash, get_current_user, authenticate_user, create_access_token
+from ..models.team import AllTeamBase
+from ..dependencies.database import delete_data, insert_data, find_one_data, update_data
+from ..dependencies.security import get_password_hash, get_current_user,  get_user_teams, authenticate_user, create_access_token
 from ..serializers.userSerializers import userResponseEntity
 
 router = APIRouter(
@@ -22,7 +23,7 @@ router = APIRouter(
 @router.post("/register")
 async def create_user(form_data: UserCreate):
     # check if user exists
-    user = find_data("users", "email", form_data.email.lower())
+    user = find_one_data("users", {"email": form_data.email.lower()})
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account already exists.")
 
@@ -48,7 +49,7 @@ async def create_user(form_data: UserCreate):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_result = userResponseEntity(find_data("users", "_id", result.inserted_id))
+    user_result = userResponseEntity(find_one_data("users", {"_id": result.inserted_id}))
     return {"user": user_result}
 
 # API Endpoint for logging in to an account
@@ -64,7 +65,7 @@ async def login_for_access_token(response: Response, form_data: Annotated[OAuth2
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user["email"]}, expires_delta=access_token_expires
+        data={"sub": user["email"], "idsub": user["id"]}, expires_delta=access_token_expires
     )
 
     # set the token in a cookie
@@ -118,10 +119,10 @@ async def change_password(form_data: UserChangePass, current_user: Annotated[Use
     return {"result": result}
 
 # API Endpoint for Deleting a User's Account
-@router.delete("/delete_user")
+@router.delete("/delete-user")
 async def delete_user(current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
-    result = delete_data("users", "_id", ObjectId(user_id))
+    result = delete_data("users", {"_id": ObjectId(user_id)})
     if result is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -130,4 +131,7 @@ async def delete_user(current_user: Annotated[UserBase, Depends(get_current_user
         )
     return {"result": result}    
 
-# API Endpoint for Updating Account Details (PUT Request)
+# API Endpoint for Getting a User's Teams
+@router.get("/teams")
+async def users_teams(all_users_teams: Annotated[AllTeamBase, Depends(get_user_teams)]):
+    return all_users_teams

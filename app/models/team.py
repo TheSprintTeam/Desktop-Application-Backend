@@ -4,6 +4,7 @@ from bson import ObjectId
 
 from .helper import PyObjectId
 
+# base model for the teams
 class TeamBase(BaseModel):
     name: str
     description: str
@@ -20,3 +21,7 @@ class TeamBase(BaseModel):
                 "description": "put description here"
             }
         }
+
+# model for all teams
+class AllTeamBase(BaseModel):
+    TeamBase: dict | None = None

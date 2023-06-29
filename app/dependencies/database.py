@@ -21,8 +21,10 @@ users_collection.create_index("email", unique = True)
 
 teams_collection = db["teams"]
 
+technologies_collection = db["technologies"]
 
-# insert function
+
+# insert function (insert one doc)
 def insert_data(collection_name, doc):
     collection = db[collection_name]
     try:
@@ -31,25 +33,30 @@ def insert_data(collection_name, doc):
     except Exception as e:
         return e
     
-# find function
-def find_data(collection_name, field, doc):
+# find one function (for one doc)
+def find_one_data(collection_name, query):
+    collection = db[collection_name]
+    return collection.find_one(query)
+
+# find function (for all docs)
+def find_data(collection_name, query):
     collection = db[collection_name]
     try:
-        result = collection.find_one({field: doc})
+        cursor = collection.find(query)
+        return cursor
+    except Exception as e:
+        return e
+
+# delete function (delete one doc)
+def delete_data(collection_name, query):
+    collection = db[collection_name]
+    try:
+        result = collection.delete_one(query)
         return result
     except Exception as e:
         return e
     
-# delete function
-def delete_data(collection_name, field, doc):
-    collection = db[collection_name]
-    try:
-        result = collection.delete_one({field: doc})
-        return result
-    except Exception as e:
-        return e
-    
-# update function
+# update function (update one doc)
 def update_data(collection_name, query, new_values):
     collection = db[collection_name]
     try:
