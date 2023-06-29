@@ -106,7 +106,7 @@ async def change_password(form_data: UserChangePass, current_user: Annotated[Use
 
     # hash the new password and update document
     hashed_password = get_password_hash(form_data.new_password)
-    result = update_data(
+    result = update_data("users",
         {"email": email},
         { "$set": {"password": hashed_password}}
     )
