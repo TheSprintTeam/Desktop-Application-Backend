@@ -9,7 +9,7 @@ class TeamBase(BaseModel):
     name: str
     description: str
     team_lead: PyObjectId | None = None
-    invites: dict | None = None
+    invites: List | None = None
     members: List[PyObjectId] | None = None
     technologies: List[PyObjectId] | None = None
 
@@ -18,7 +18,10 @@ class TeamBase(BaseModel):
         schema_extra = {
             "example": {
                 "name": "The Sprint Team",
-                "description": "put description here"
+                "description": "put description here",
+                "invites": [],
+                "members": [],
+                "technologies": []
             }
         }
 

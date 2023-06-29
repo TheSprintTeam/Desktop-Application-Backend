@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 import google_auth_oauthlib.flow
+import math, random
 
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
@@ -139,3 +140,13 @@ async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_u
         detail="User is not in any teams",
     )
     return teams
+
+# helper function to generate 6 digit passcode
+def generate_otp_code():
+    digits = "0123456789"
+    otp = ""
+
+    for i in range(6) :
+        otp += digits[math.floor(random.random() * 10)]
+ 
+    return otp
