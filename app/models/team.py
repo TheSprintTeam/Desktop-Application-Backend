@@ -10,7 +10,7 @@ class TeamBase(BaseModel):
     description: str
     team_lead: PyObjectId | None = None
     invites: List | None = None
-    members: List[PyObjectId] | None = None
+    members: List | None = None
     technologies: List[PyObjectId] | None = None
 
     class Config:

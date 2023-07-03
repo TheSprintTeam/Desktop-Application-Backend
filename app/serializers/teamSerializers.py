@@ -16,4 +16,7 @@ def teamResponseEntity(team) -> dict:
         "name": team["name"],
         "description": team["description"],
         "team_lead": str(team["team_lead"]),
+        "invites": team["invites"],
+        "members": team["members"],
+        "technologies": [str(i) for i in team["technologies"]]
     }

@@ -131,6 +131,27 @@ async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get
         )
     return teamResponseEntity(result)
 
+# function that checks if user is a team lead or co lead for team
+async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
+    user_id = current_user["id"]
+    result = find_one_data("teams",
+        {"$and": [
+            {"_id": ObjectId(team_id)},
+            {"$or": [
+                {"team_lead": ObjectId(user_id)},
+                {"$and": [
+                    {"members.user_id": ObjectId(user_id)},
+                    {"members.role": ObjectId("649e1e7e45463b7a2cd13e0d")}
+                ]}
+            ]}
+        ]})
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User does not have high enough permissions or is not in the team.",
+        )
+    return teamResponseEntity(result)
+
 async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
     teams = get_all_user_teams(ObjectId(user_id))

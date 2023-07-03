@@ -6,7 +6,6 @@ def userEntity(user) -> dict:
         "password": user["password"],
         "first_name": user["first_name"],
         "last_name": user["last_name"],
-        "role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
         #"user_name": user["user_name"],
@@ -21,7 +20,6 @@ def userEntityGoogle(user) -> dict:
         "email": user["email"],
         "first_name": user["first_name"],
         "last_name": user["last_name"],
-        #"role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
         #"user_name": user["user_name"],
@@ -36,7 +34,6 @@ def userResponseEntity(user) -> dict:
         "email": user["email"],
         "first_name": user["first_name"],
         "last_name": user["last_name"],
-        "role_id": str(user["role_id"]),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"]
         #"user_name": user["user_name"],

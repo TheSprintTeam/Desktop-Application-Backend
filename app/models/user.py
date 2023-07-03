@@ -11,7 +11,6 @@ class UserBase(BaseModel):
     last_name: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    role_id: PyObjectId | None = None
     # user_name: str
     # ip_address: str
     # user_password: str
@@ -25,7 +24,6 @@ class UserBase(BaseModel):
                 "last_name": "Doe",
                 "created_at": "2023-06-14T10:30:00Z",
                 "updated_at": "2023-06-14T10:30:00Z",
-                "role_id": "609c85460f7f781a234cdcf4"
             }
         }
 
@@ -37,3 +35,19 @@ class UserCreate(UserBase):
 class UserChangePass(BaseModel):
     old_password: str
     new_password: str
+
+# model for inviting a user to a team
+class UserInvite(BaseModel):
+    email: str
+    role_id: PyObjectId
+    name: str
+
+    class Config:
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "email": "johndoe1@example.com",
+                "role_id": "649e1e3e45463b7a2cd13e0c",
+                "name": "My Name"
+            }
+        }
