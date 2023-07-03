@@ -6,8 +6,8 @@ def teamEntity(team) -> dict:
         "description": team["description"],
         "team_lead": str(team["team_lead"]),
         "invites": team["invites"],
-        "members": str(team["members"]),
-        "technologies": str(team["technologies"])
+        "members": team["members"],
+        "technologies": team["technologies"]
     }
 
 def teamResponseEntity(team) -> dict:
@@ -16,7 +16,7 @@ def teamResponseEntity(team) -> dict:
         "name": team["name"],
         "description": team["description"],
         "team_lead": str(team["team_lead"]),
-        "invites": team["invites"],
-        "members": team["members"],
+        "invites": [str(i) for i in team["invites"]],
+        "members": [str(i) for i in team["members"]],
         "technologies": [str(i) for i in team["technologies"]]
     }

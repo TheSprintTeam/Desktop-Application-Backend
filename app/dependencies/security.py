@@ -13,7 +13,7 @@ from ..config import SECRET_KEY, ALGORITHM
 from ..models.token import TokenData, OAuth2PasswordBearerCookie
 from ..models.user import UserBase
 from ..serializers.userSerializers import userEntity, userEntityGoogle, userResponseEntity
-from ..serializers.teamSerializers import teamResponseEntity
+from ..serializers.teamSerializers import teamEntity, teamResponseEntity
 
 # Use the client_secret.json file to identify the application requesting authorization. The client ID (from that file) and access scopes are required.
 flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
@@ -129,7 +129,7 @@ async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User is not in this team team",
         )
-    return teamResponseEntity(result)
+    return result
 
 # function that checks if user is a team lead or co lead for team
 async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
@@ -150,7 +150,7 @@ async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="User does not have high enough permissions or is not in the team.",
         )
-    return teamResponseEntity(result)
+    return teamEntity(result)
 
 async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]

@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..dependencies.security import get_current_user, is_user_in_team, user_has_perms, generate_otp_code
 from ..models.team import TeamBase
 from ..models.user import UserBase, UserInvite
-from ..serializers.teamSerializers import teamResponseEntity
+from ..serializers.teamSerializers import teamResponseEntity, teamEntity
+from ..serializers.userSerializers import userResponseEntity
 
 router = APIRouter(
     prefix="/teams",
@@ -39,17 +40,27 @@ async def create_team(form_data: TeamBase, current_user: Annotated[UserBase, Dep
 # API Endpoint for Getting a Team Document (GET)
 @router.get("/{team_id}")
 async def get_team_details(team_id: str, team_document: UserInTeamsDep):
-    return team_document
+    return teamResponseEntity(team_document)
 
 # API Endpoint for Getting Technologies within a Team (GET)
 @router.get("/{team_id}/technologies")
 async def get_technologies(team_id: str, team_document: UserInTeamsDep):
-    return team_document["technologies"]
+    technology_list = []
+    for technology in team_document["technologies"]:
+        technology_data = find_one_data("technologies", {"_id": ObjectId(technology["id"])})
+        technology_list.append(technology_data)
+    return teamResponseEntity(team_document)["technologies"]
 
 # API Endpoint for Getting All Members within a Team (GET)
 @router.get("/{team_id}/members")
 async def get_team_members(team_id: str, team_document: UserInTeamsDep):
-    return team_document["members"]
+    member_list = []
+    for member in team_document["members"]:
+        member_data = userResponseEntity(find_one_data("users", {"_id": ObjectId(member["user_id"])}))
+        role_data = find_one_data("roles", {"_id": member["role"]})
+        member_data["role"] = role_data["role"]
+        member_list.append(member_data)
+    return member_list
 
 
 # API Endpoint for Inviting a Team Member (PUT Request, updating the team)
@@ -96,7 +107,7 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
     user_email = current_user["email"]
     
     # check if the user's email exists in the teams.invite list and otp code is correct
-    team = teamResponseEntity(find_one_data("teams", {"$and": [{"invites.email": user_email}, {"invites.otp_code": otp_code}] } ))
+    team = teamEntity(find_one_data("teams", {"$and": [{"invites.email": user_email}, {"invites.otp_code": otp_code}] } ))
     if team is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -121,7 +132,10 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
         )
     
     # delete the user in the invites
-    delete_invite = delete_data("teams", {"invites.email": user_email} )
+    delete_invite = update_data("teams", 
+                                {"_id": ObjectId(team["id"])},
+                                {"$pull": {"invites": {"email": user_email} } } 
+                                )
     if delete_invite is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
