@@ -1,9 +1,10 @@
 from typing import Annotated
 from bson import ObjectId
 
-from ..dependencies.database import insert_data, find_one_data, update_data, delete_data
+from ..dependencies.database import insert_data, find_one_data, update_data
 from fastapi import APIRouter, Depends, HTTPException, status
 from ..dependencies.security import get_current_user, is_user_in_team, user_has_perms, generate_otp_code
+from ..dependencies.email import send_email
 from ..models.team import TeamBase
 from ..models.user import UserBase, UserInvite
 from ..serializers.teamSerializers import teamResponseEntity, teamEntity
@@ -85,6 +86,12 @@ async def team_invite_user(team_id: str, form_data: UserInvite, team_document: A
             detail="User has already been invited to the team.",
         )
 
+    # send the email to user with the invite code (use some external service to send email)
+    send_email(form_data.email, 
+               "You have an invite to a Sprint Team.", 
+               "You have been invited to the " + team_document["name"] + " on Sprint. Join the team with the following code: " + otp_code + 
+               ". If you do not have an account with us, please create one.")
+    
     # store the user email and invite code to the teams.invite list
     result = update_data("teams", 
                          {"_id": ObjectId(team_id)},
@@ -95,8 +102,6 @@ async def team_invite_user(team_id: str, form_data: UserInvite, team_document: A
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not invite user to the team.",
         )
-
-    # send the email to user with the invite code (use some external service to send email)
 
     return "Invite to user was sent successfully"
 
@@ -120,7 +125,7 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
             user_role = team_invite["role"]
             break
 
-    # adding the user to the team
+    # adding the user to the team in database
     result_update = update_data("teams",
                                 {"_id": ObjectId(team["id"])},
                                 {"$push": {"members": {"user_id": ObjectId(current_user["id"]), "role": ObjectId(user_role), "email": user_email } } }
@@ -131,7 +136,7 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
             detail="Could not add user to the team.",
         )
     
-    # delete the user in the invites
+    # delete the user in the invites in the teams collection database
     delete_invite = update_data("teams", 
                                 {"_id": ObjectId(team["id"])},
                                 {"$pull": {"invites": {"email": user_email} } } 

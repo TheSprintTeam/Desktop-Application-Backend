@@ -116,6 +116,12 @@ def get_all_user_teams(user_id):
 
 async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
+    check = find_one_data("teams", {"_id": ObjectId(team_id)})
+    if check is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="There is no team with this team ID.",
+        )
     result = find_one_data("teams",
         {"$and": [
             {"_id": ObjectId(team_id)},
@@ -126,7 +132,7 @@ async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get
         ]})
     if result is None:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is not in this team team",
         )
     return result
@@ -147,8 +153,8 @@ async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_
         ]})
     if result is None:
         raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="User does not have high enough permissions or is not in the team.",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User does not have high enough permissions.",
         )
     return teamEntity(result)
 
@@ -157,7 +163,7 @@ async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_u
     teams = get_all_user_teams(ObjectId(user_id))
     if teams is None:
         raise HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="User is not in any teams",
     )
     return teams

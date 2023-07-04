@@ -18,3 +18,7 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 SWAP_TOKEN_ENDPOINT = "/swap_token"
 API_LOCATION = "http://127.0.0.1:8000"
+
+# Email Service (using Gmail)
+EMAIL_SENDER = "sprintteam12@gmail.com"
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
