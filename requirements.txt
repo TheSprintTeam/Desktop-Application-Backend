@@ -1,0 +1,8 @@
+fastapi==0.98.0
+google_auth_oauthlib==1.0.0
+passlib==1.7.4
+protobuf==4.23.3
+pydantic==1.10.9
+pymongo==4.3.3
+python-dotenv==1.0.0
+python_jose==3.3.0
