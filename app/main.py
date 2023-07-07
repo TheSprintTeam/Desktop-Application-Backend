@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 
-from .routers import users, auth, teams, machine_learning
+from .routers import google_auth, users, teams, machine_learning
 
 # uvicorn app.main:app --reload
 app = FastAPI()
 
 
 app.include_router(users.router)
-app.include_router(auth.router)
+app.include_router(google_auth.router)
 app.include_router(teams.router)
 app.include_router(machine_learning.router)
 

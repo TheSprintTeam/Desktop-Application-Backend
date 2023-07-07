@@ -1,12 +1,13 @@
 from typing import Annotated
 from bson import ObjectId
 
-from ..dependencies.database import insert_data, find_one_data, update_data
 from fastapi import APIRouter, Depends, HTTPException, status
-from ..dependencies.security import get_current_user, is_user_in_team, user_has_perms, generate_otp_code
-from ..dependencies.email import send_email
+
+from ..helpers.email_helpers import send_email, generate_otp_code
 from ..models.team import TeamBase
 from ..models.user import UserBase, UserInvite
+from ..dependencies.database import insert_data, find_one_data, update_data
+from ..dependencies.security import get_current_user, is_user_in_team, user_has_perms
 from ..serializers.teamSerializers import teamResponseEntity, teamEntity
 from ..serializers.userSerializers import userResponseEntity
 
@@ -66,7 +67,7 @@ async def get_team_members(team_id: str, team_document: UserInTeamsDep):
 
 # API Endpoint for Inviting a Team Member (PUT Request, updating the team)
 @router.put("{team_id}/invite")
-async def team_invite_user(team_id: str, form_data: UserInvite, team_document: Annotated[TeamBase, Depends(user_has_perms)]):
+async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTeamsDep, team_document: Annotated[TeamBase, Depends(user_has_perms)]):
     # first we generate the 6 digit invite code
     otp_code = generate_otp_code()
 
@@ -89,8 +90,8 @@ async def team_invite_user(team_id: str, form_data: UserInvite, team_document: A
     # send the email to user with the invite code (use some external service to send email)
     send_email(form_data.email, 
                "You have an invite to a Sprint Team.", 
-               "You have been invited to the " + team_document["name"] + " on Sprint. Join the team with the following code: " + otp_code + 
-               ". If you do not have an account with us, please create one.")
+               "You have been invited to the " + team_document["name"] + " on Sprint. Join the team with the following code: "
+                + otp_code + ". If you do not have an account with us, please create an account and then join the team with the code.")
     
     # store the user email and invite code to the teams.invite list
     result = update_data("teams", 
@@ -144,7 +145,7 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
     if delete_invite is Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not delete user from the team.",
+            detail="Could not delete user's invite in the team.",
         )
     
     return {"Successfully added member to team."}

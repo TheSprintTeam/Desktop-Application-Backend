@@ -5,12 +5,13 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
-from ..models.user import UserBase
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES, SWAP_TOKEN_ENDPOINT, GOOGLE_CLIENT_ID
-from ..dependencies.security import authenticate_user_email, create_access_token, authorization_url, flow
+from ..helpers.user_helpers import authenticate_user_email, create_access_token
+from ..models.user import UserBase
+from ..models.token import Token
+from ..dependencies.security import authorization_url, flow
 from ..dependencies.google_auth_javascript import google_login_javascript_client
 from ..dependencies.database import users_collection
-from ..models.token import Token
 from ..serializers.userSerializers import userResponseEntity
 
 from google.oauth2 import id_token
