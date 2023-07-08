@@ -99,13 +99,14 @@ async def google_callback(code: str):
 
     # Add user to database if already doesn't exist
     user = authenticate_user_email(user_email)
-    if user is False:
+    if user is None:
         user_data = UserBase(
             email = user_email.lower(),
             first_name = id_info["given_name"],
             last_name = id_info["family_name"],
             created_at = datetime.utcnow(),
-            updated_at = datetime.utcnow()
+            updated_at = datetime.utcnow(),
+            verified = True
             # role to be done
         )
 

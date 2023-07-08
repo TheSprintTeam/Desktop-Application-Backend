@@ -33,6 +33,7 @@ authorization_url, state = flow.authorization_url(
 # Create an OAuth2 scheme (username and password)
 oauth2_scheme = OAuth2PasswordBearerCookie(tokenUrl="/users/login")
 
+# dependency to get the current user and checks token
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -52,6 +53,16 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     return userResponseEntity(user)
 
+# dependency to check if user is unverfied
+async def user_unverified(current_user: Annotated[UserBase, Depends(get_current_user)]):
+    if current_user["verified"] is True:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is already verified.",
+        )
+    return current_user
+
+# dependency to check if a user is in a team given a team_id
 async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
     check = find_one_data("teams", {"_id": ObjectId(team_id)})
@@ -75,7 +86,7 @@ async def is_user_in_team(team_id, current_user: Annotated[UserBase, Depends(get
         )
     return result
 
-# function that checks if user is a team lead or co lead for team
+# dependency that checks if user is a team lead or co lead for team
 async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
     result = find_one_data("teams",
@@ -96,6 +107,7 @@ async def user_has_perms(team_id, current_user: Annotated[UserBase, Depends(get_
         )
     return teamEntity(result)
 
+# dependency that get's all of the user's teams
 async def get_user_teams(current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_id = current_user["id"]
     teams = get_all_user_teams(ObjectId(user_id))

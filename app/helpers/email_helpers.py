@@ -14,9 +14,12 @@ def send_email(email_receiver: str, email_subject: str, body: str):
 
     context = ssl.create_default_context()
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
-        smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        smtp.sendmail(EMAIL_SENDER, email_receiver, em.as_string())
+    try: 
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+            smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            smtp.sendmail(EMAIL_SENDER, email_receiver, em.as_string())
+    except Exception as e:
+        return e
 
 # helper function to generate 6 digit passcode
 def generate_otp_code():

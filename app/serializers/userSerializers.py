@@ -7,7 +7,8 @@ def userEntity(user) -> dict:
         "first_name": user["first_name"],
         "last_name": user["last_name"],
         "created_at": user["created_at"],
-        "updated_at": user["updated_at"]
+        "updated_at": user["updated_at"],
+        "verified": user["verified"]
         #"user_name": user["user_name"],
         #"ip_address": user["ip_address"],
         #"user_password": user["user_password"]
@@ -21,7 +22,8 @@ def userEntityGoogle(user) -> dict:
         "first_name": user["first_name"],
         "last_name": user["last_name"],
         "created_at": user["created_at"],
-        "updated_at": user["updated_at"]
+        "updated_at": user["updated_at"],
+        "verified": user["verified"]
         #"user_name": user["user_name"],
         #"ip_address": user["ip_address"],
         #"user_password": user["user_password"]
@@ -35,7 +37,8 @@ def userResponseEntity(user) -> dict:
         "first_name": user["first_name"],
         "last_name": user["last_name"],
         "created_at": user["created_at"],
-        "updated_at": user["updated_at"]
+        "updated_at": user["updated_at"],
+        "verified": user["verified"]
         #"user_name": user["user_name"],
         #"ip_address": user["ip_address"],
         #"user_password": user["user_password"]
