@@ -89,7 +89,7 @@ async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTea
 
     # send the email to user with the invite code (use some external service to send email)
     send_email(form_data.email, 
-               "You have an invite to a Sprint Team.", 
+               "You have an invite to a Sprint Team", 
                "You have been invited to the " + team_document["name"] + " on Sprint. Join the team with the following code: "
                 + otp_code + ". If you do not have an account with us, please create an account and then join the team with the code.")
     
@@ -113,12 +113,13 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
     user_email = current_user["email"]
     
     # check if the user's email exists in the teams.invite list and otp code is correct
-    team = teamEntity(find_one_data("teams", {"$and": [{"invites.email": user_email}, {"invites.otp_code": otp_code}] } ))
-    if team is Exception:
+    team = find_one_data("teams", {"$and": [{"invites.email": user_email}, {"invites.otp_code": otp_code}] } )
+    if team is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Wrong invite code or code is expired.",
         )
+    team = teamEntity(team)
     
     # get the user invite data (the role that the team lead selected for the user)
     for team_invite in team["invites"]:

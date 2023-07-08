@@ -20,3 +20,6 @@ def teamResponseEntity(team) -> dict:
         "members": [str(i) for i in team["members"]],
         "technologies": [str(i) for i in team["technologies"]]
     }
+
+def teamListResponseEntity(teams) -> list:
+    return [teamEntity(team) for team in teams]
