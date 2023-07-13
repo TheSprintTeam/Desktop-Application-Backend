@@ -7,12 +7,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
 from ..helpers.user_helpers import get_password_hash, authenticate_user, create_access_token
+from ..helpers.email_helpers import send_email, generate_otp_code
 from ..models.token import Token
 from ..models.user import UserBase, UserCreate, UserChangePass
 from ..models.team import AllTeamBase
 from ..dependencies.database import delete_data, insert_data, find_one_data, update_data
-from ..dependencies.security import get_current_user, get_user_teams
-from ..serializers.userSerializers import userResponseEntity
+from ..dependencies.security import get_current_user, user_unverified, get_user_teams
+from ..serializers.userSerializers import userEntity, userResponseEntity
 
 router = APIRouter(
     prefix="/users",
@@ -31,16 +32,28 @@ async def create_user(form_data: UserCreate):
 
     # hash the password
     hashed_password = get_password_hash(form_data.password)
+    otp_code = generate_otp_code()
 
     # set user created object password to the hashed password
     form_data.password = hashed_password
     form_data.email = form_data.email.lower()
     form_data.created_at = datetime.utcnow()
     form_data.updated_at = form_data.created_at
-    # role to be done
+    form_data.otp_code = otp_code
+    form_data.verified = False
     # user_name to be done
     # ip_address to be done
     # user_password to be done
+    
+    # send email to user's email
+    email = send_email(form_data.email, 
+               "Please verify your account with Sprint", 
+               "Your 6 digit code is: " + otp_code + ". Please enter this 6 digit code on the app.")
+    if email is Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not send email of one-time password code to your email. Please try again.",
+        )
     
     # insert user into database
     result = insert_data("users", form_data.dict())
@@ -48,11 +61,44 @@ async def create_user(form_data: UserCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not insert user into database",
-            headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     user_result = userResponseEntity(find_one_data("users", {"_id": result.inserted_id}))
     return {"user": user_result}
+
+# API Endpoint to verify a user's email
+@router.put("/verify")
+async def verify_user(otp_code: str, current_user: Annotated[UserBase, Depends(user_unverified)]):
+    user_email = current_user["email"]
+
+    # check if otp_code matches the user's email they created account with
+    user = find_one_data("users", {"$and": [{"email": user_email}, {"otp_code": otp_code}] } )
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Wrong invite code or code is expired.",
+        )
+    user = userEntity(user)
+    
+    # set user to verified status
+    update_user = update_data("users", {"email": user_email}, {"$set": {"verified": True} })
+    if update_user is Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not update user's status to verified.",
+        )
+
+    # delete the otp_code connected to account
+    delete_otpcode = update_data("users", {"email": user_email}, {"$unset": {"otp_code": ""} })
+    if delete_otpcode is Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not delete the one-time password code from user's account.",
+        )
+
+    # return message saying user's account is verified and user's account details
+    user_result = userResponseEntity(find_one_data("users", {"_id": ObjectId(user["id"])}))
+    return {"message": "Successfully verified user's account!", "user": user_result}
 
 # API Endpoint for logging in to an account
 @router.post("/login", response_model=Token)

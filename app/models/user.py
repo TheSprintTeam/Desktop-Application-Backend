@@ -30,6 +30,8 @@ class UserBase(BaseModel):
 # additional model for creating a user
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
+    otp_code: str | None = None
+    verified: bool | None = None
 
 # model for changing password
 class UserChangePass(BaseModel):

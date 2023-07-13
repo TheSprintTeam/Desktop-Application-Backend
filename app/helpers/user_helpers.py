@@ -38,7 +38,7 @@ def authenticate_user(email: str, password: str):
 def authenticate_user_email(email: str):
     user = get_user(email)
     if not user:
-        return False
+        return None
     return userEntityGoogle(user)
 
 # helper function to verify a user's password to the one in db
