@@ -11,9 +11,9 @@ class UserBase(BaseModel):
     last_name: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    # user_name: str
-    # ip_address: str
-    # user_password: str
+    user: str
+    ip: str
+    ssh_password: str
 
     class Config:
         json_encoders = {ObjectId: str}
@@ -24,6 +24,9 @@ class UserBase(BaseModel):
                 "last_name": "Doe",
                 "created_at": "2023-06-14T10:30:00Z",
                 "updated_at": "2023-06-14T10:30:00Z",
+                "user": "john",
+                "ip": "0.0.0.0",
+                "ssh_password": "test_pass"
             }
         }
 

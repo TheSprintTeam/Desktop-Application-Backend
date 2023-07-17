@@ -11,7 +11,7 @@ class TeamBase(BaseModel):
     team_lead: PyObjectId | None = None
     invites: List | None = None
     members: List | None = None
-    technologies: List[PyObjectId] | None = None
+    technologies: List | None = None
 
     class Config:
         json_encoders = {ObjectId: str}
