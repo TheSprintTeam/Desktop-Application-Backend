@@ -11,9 +11,9 @@ class UserBase(BaseModel):
     last_name: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    user: str
-    ip: str
-    ssh_password: str
+    user: str | None = None
+    ip: str | None = None
+    ssh_password: str | None = None
 
     class Config:
         json_encoders = {ObjectId: str}
@@ -45,7 +45,7 @@ class UserChangePass(BaseModel):
 class UserInvite(BaseModel):
     email: str
     role_id: PyObjectId
-    name: str
+    name: str | None = None
 
     class Config:
         json_encoders = {ObjectId: str}
