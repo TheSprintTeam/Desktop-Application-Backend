@@ -154,8 +154,8 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
 
 # API endpoint for installing team-wide
 @router.post("/teamInstall/{team_id}")
-async def teamInstall(team_id :ObjectId):
-    team = await find_one_data("teams", {"_id" : team_id})
+async def teamInstall(team_id: str):
+    team = await find_one_data("teams", {"_id" : ObjectId(team_id)})
     url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app'
 
     for memberId in team["members"]:
@@ -169,18 +169,19 @@ async def teamInstall(team_id :ObjectId):
 
 # API endpoint for installing team-wide
 @router.post("{team_id}/userInstall/{user_id}")
-async def userInstall(team_id :ObjectId, user_id :ObjectId):
-    team = await find_one_data("team", {"_id" : team_id})["members"]
+async def userInstall(team_id: str, user_id: str):
+    team = await find_one_data("team", {"_id" : ObjectId(team_id)})["members"]
     url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app'
 
     payload = {
             "technologies" : team["technologies"],
-            "user_id" : user_id
+            "user_id" : ObjectId(user_id)
             }
     
     post(url, json = payload)
     
     return {"Installation finished without errors"}
+
 """
 
 # API Endpoint for Deleting a Team (POST)

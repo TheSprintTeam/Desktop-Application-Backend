@@ -24,7 +24,7 @@ router = APIRouter(
 
 # API Endpoint for creating an account
 @router.post("/register")
-async def create_user(form_data: UserCreate):
+async def create_user(response: Response, form_data: UserCreate):
     # check if user exists
     user = find_one_data("users", {"email": form_data.email.lower()})
     if user:
@@ -64,7 +64,22 @@ async def create_user(form_data: UserCreate):
         )
 
     user_result = userResponseEntity(find_one_data("users", {"_id": result.inserted_id}))
-    return {"user": user_result}
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user_result["email"], "idsub": user_result["id"]}, expires_delta=access_token_expires
+    )
+
+    # set the token in a cookie
+    response.set_cookie(
+        key = "session_token",
+        value = f"Bearer {access_token}",
+        httponly = True,
+        max_age = 86400,
+        expires = 86400
+    )
+
+    return {"user": user_result, "access_token": access_token, "token_type": "bearer"}
 
 # API Endpoint to verify a user's email
 @router.put("/verify")
