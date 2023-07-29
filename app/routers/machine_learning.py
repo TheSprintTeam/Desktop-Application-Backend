@@ -53,6 +53,19 @@ async def get_prompt(team_id: str):
     return promptResponseEntity(result)
 
 # API Endpoint to store the recommendation
+@router.post("/teams/{team_id}/recommendation")
+async def store_team_recommendation(team_id: str, request:Request):
+    recommendation = await request.json()
+    #need to store recommendation for the team from the database
 
+    #Convert recommendation into a json format
+    recommendation_json = json.dumps(recommendation)
 
 # API Endpoint to get the recommendation
+@router.get("/teams/{team_id}/recommendation")
+async def get_team_recommendation(team_id: str):
+    #need to get recommendation for the team from the database
+
+    recommendation = json.loads(recommendation_json)
+    recommendation = {"message": "Sprint believes you should do this:"}
+    return recommendation
