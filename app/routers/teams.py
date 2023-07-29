@@ -155,8 +155,8 @@ async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depend
 # API endpoint for installing team-wide
 @router.post("/teamInstall/{team_id}")
 async def teamInstall(team_id: str):
-    team = await find_one_data("teams", {"_id" : ObjectId(team_id)})
-    url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app'
+    team = find_one_data("teams", {"_id" : ObjectId(team_id)})
+    url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app/'
 
     for memberId in team["members"]:
         payload = {
@@ -168,10 +168,10 @@ async def teamInstall(team_id: str):
     return {"Installation finished without errors"}
 
 # API endpoint for installing team-wide
-@router.post("{team_id}/userInstall/{user_id}")
+@router.post("/{team_id}/userInstall/{user_id}")
 async def userInstall(team_id: str, user_id: str):
-    team = await find_one_data("team", {"_id" : ObjectId(team_id)})["members"]
-    url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app'
+    team = find_one_data("teams", {"_id" : ObjectId(team_id)})["members"]
+    url = 'https://sprint-391123-vtxnqdaumq-uc.a.run.app/'
 
     payload = {
             "technologies" : team["technologies"],
