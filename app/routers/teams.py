@@ -67,7 +67,7 @@ async def get_team_members(team_id: str, team_document: UserInTeamsDep):
 
 
 # API Endpoint for Inviting a Team Member (PUT Request, updating the team)
-@router.put("{team_id}/invite")
+@router.put("/{team_id}/invite")
 async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTeamsDep, team_document: Annotated[TeamBase, Depends(user_has_perms)]):
     # first we generate the 6 digit invite code
     otp_code = generate_otp_code()
