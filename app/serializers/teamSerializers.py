@@ -27,7 +27,6 @@ def teamListResponseEntity(teams) -> list:
 
 # entities for the invites, members, and technologies (they are lists which may have objectIds)
 def inviteEntity(invite) -> dict:
-    print(invite)
     return {
         "email": invite["email"],
         "role": str(invite["role"]),
