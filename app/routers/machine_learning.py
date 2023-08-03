@@ -12,8 +12,14 @@ import json
 import requests
 from models.helper import PyObjectId
 
-client = MongoClient("mongodb+srv://sprintteam03:Dasphy03.@dev-backend-cluster.ohvhxe6.mongodb.net")
-db = client["dev-backend-cluster"]
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from ..config import MONGODB_URL
+import certifi
+
+
+client = MongoClient(MONGODB_URL, server_api=ServerApi('1'), tlsCAFile=certifi.where())
+db = client["sprint"]
 
 router = APIRouter(
     prefix="/teams/ml",
@@ -28,17 +34,28 @@ UserInTeamsDep = Annotated[TeamBase, Depends(is_user_in_team)]
 
 # Function to get the recommendation from the "machine-learning" collection on MongoDB
 def get_recommendation_from_db(team_id: ObjectId):
-    # Connect to the MongoDB database 
-    client = MongoClient("mongodb+srv://sprintteam03:Dasphy03.@dev-backend-cluster.ohvhxe6.mongodb.net")
-    db = client["dev-backend-cluster"]
     collection = db["machine-learning"]
-
-    # Find the recommendation document based on the team_id
     recommendation_doc = collection.find_one({"team_id": team_id})
-
-    client.close()
-
     return recommendation_doc
+
+
+# Function to store the recommendation in MongoDB and update the "teams" collection
+def store_recommendation_to_mongodb(team_id: PyObjectId, recommendations: List[str]):
+    # Get the team's technology from the "teams" collection
+    team_technology = db["teams"].find_one({"_id": team_id})["technologies"]
+
+    # Update the technologies field with the recommendations
+    db["teams"].update_one(
+        {"_id": team_id},
+        {"$push": {"technologies": {"$each": recommendations}}},
+    )
+    # Store the updated recommendation list in the machine-learning collection
+    db["machine-learning"].update_one(
+        {"_id": team_id},
+        {"$set": {"recommendation": recommendations}},
+    )
+
+    return {"message": "Recommendation saved successfully"}
 
 
 # API Endpoint for storing the prompt
@@ -52,7 +69,7 @@ async def store_prompt(team_id: str, prompt: str, team_doc: Annotated[TeamBase, 
             detail="Your team already entered in a prompt.",
         )
 
-    # we take the form data and store it to the team id
+    #  take the form data and store it to the team id
     result = insert_data("machine-learning", {"team_id": ObjectId(team_id), "prompt": prompt})
     if result is Exception:
         raise HTTPException(
@@ -87,26 +104,8 @@ async def store_team_recommendation(team_id: str, request: Request, team_doc: Us
 
     if response.status_code == 200:
         recommendation_response = response.json()
-        # Stores the recommendation_response in mongodb
-        # Function to store the recommendation in MongoDB
-        def store_recommendation_to_mongodb(team_id: PyObjectId, prompt: str, recommendation: List[str]):
-            # Create a MongoDB client
-            client = MongoClient("mongodb+srv://sprintteam03:Dasphy03.@dev-backend-cluster.ohvhxe6.mongodb.net")
-            db = client["dev-backend-cluster"]
-            collection = db["teams"]
-
-            # Get the team's technology from the "team" collection
-            team_technology = team_doc.technologies
-
-            # Update the technologies field with the recommendation
-            result = collection.update_one(
-                {"_id": team_id},
-                {"$push": {"technologies": recommendation}},
-            )
-
-            client.close()
-
-            return result.acknowledged
+        # Receive the recommendations portion in the JSON file
+        recommendations = recommendation_response.get("recommendations")
 
         # Convert team_id from string to ObjectId
         team_id_obj = ObjectId(team_id)
@@ -116,9 +115,10 @@ async def store_team_recommendation(team_id: str, request: Request, team_doc: Us
 
         if recommendation_doc:
             # Extract the recommendation from the machine-learning collection
-            recommendation_list = recommendation_doc.get("recommendation")
+            recommendation_list = recommendation_doc.get("recommendation", [])
+
             # Append the new recommendation to the list
-            recommendation_list.append(recommendation)
+            recommendation_list.extend(recommendations)  # Use extend to add all recommendations
 
             # Store the updated recommendation list in the machine-learning collection
             collection = db["machine-learning"]
@@ -129,20 +129,20 @@ async def store_team_recommendation(team_id: str, request: Request, team_doc: Us
 
             # Update the teams collection with the new recommendation under the technologies
             team_technology = team_doc.technologies
-            team_technology.append(recommendation)
+            team_technology.extend(recommendations)  # Use extend to add all recommendations
             collection = db["teams"]
             collection.update_one(
                 {"_id": team_id_obj},
                 {"$set": {"technologies": team_technology}},
             )
 
+            return {"message": "Recommendation saved successfully"}
+
+        else:
+            # Create a new document with the recommendation for the team in the "machine-learning" collection
+            store_recommendation_to_mongodb(team_id_obj, recommendations)
 
             return {"message": "Recommendation saved successfully"}
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No recommendation found for the given team_id.",
-            )
 
     else:
         raise HTTPException(
@@ -151,23 +151,23 @@ async def store_team_recommendation(team_id: str, request: Request, team_doc: Us
         )
 
 # API Endpoint to get the recommendation
+# API Endpoint to get the recommendation
 @router.get("/{team_id}/recommendation")
 async def get_team_recommendation(team_id: str):
-    # Get the recommendation for the team from the database (if stored)
+    # Convert team_id from string to ObjectId
+    team_id_obj = ObjectId(team_id)
 
-    cloud_run_url = "https://sprint-391123-vtxnqdaumq-uc.a.run.app"
+    # Get the recommendation from the machine-learning collection
+    recommendation_doc = get_recommendation_from_db(team_id_obj)
 
-    input_data = {"data": "Your input data here"} 
-    #Need to have actual input data, work on this rn a placeholder
-    response = requests.post(f"{cloud_run_url}/predict", json=input_data)
+    if recommendation_doc:
+        # Extract the recommendation from the machine-learning collection
+        recommendation_list = recommendation_doc.get("recommendation", [])
 
-    if response.status_code == 200:
-        recommendation_response = response.json()
-        # recieves the message portion in the JSON file
-        recommendation_message = recommendation_response.get("message")
-        return {"message": recommendation_message}
+        return {"recommendation": recommendation_list}
+
     else:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve the recommendation from the engine.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No recommendation found for the given team_id.",
         )
