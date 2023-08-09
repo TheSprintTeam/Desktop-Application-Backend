@@ -10,7 +10,7 @@ from ..serializers.mlSerializers import promptResponseEntity
 
 import json
 import requests
-from models.helper import PyObjectId
+from ..models.helper import PyObjectId
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
