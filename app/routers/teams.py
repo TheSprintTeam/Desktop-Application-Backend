@@ -67,13 +67,13 @@ async def get_team_members(team_id: str, team_document: UserInTeamsDep):
 
 
 # API Endpoint for Inviting a Team Member (PUT Request, updating the team)
-@router.put("{team_id}/invite")
+@router.put("/{team_id}/invite")
 async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTeamsDep, team_document: Annotated[TeamBase, Depends(user_has_perms)]):
     # first we generate the 6 digit invite code
     otp_code = generate_otp_code()
 
     # check if user email is already in the team
-    invite_in_team = find_one_data("teams", {"members.email": form_data.email})
+    invite_in_team = find_one_data("teams", {"_id": ObjectId(team_id), "members.email": form_data.email})
     if invite_in_team:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -81,7 +81,7 @@ async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTea
         )
 
     # check if user email already has an invite to the team
-    team = find_one_data("teams", {"invites.email": form_data.email})
+    team = find_one_data("teams", {"_id": ObjectId(team_id), "invites.email": form_data.email})
     if team:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -113,7 +113,7 @@ async def team_invite_user(team_id: str, form_data: UserInvite, check: UserInTea
 async def team_user_join(otp_code: str, current_user: Annotated[UserBase, Depends(get_current_user)]):
     user_email = current_user["email"]
     
-    # check if the user's email exists in the teams.invite list and otp code is correct
+    # check if the user's email exists in the teams.invite list and otp code is correct (checks for matching email and otp code)
     team = find_one_data("teams", {"$and": [{"invites.email": user_email}, {"invites.otp_code": otp_code}] } )
     if team is None:
         raise HTTPException(
