@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import google_auth, users, teams, machine_learning
+from .routers import google_auth, users, teams, machine_learning, recommendations
 
 # uvicorn app.main:app --reload
 app = FastAPI()
@@ -24,6 +24,7 @@ app.include_router(users.router)
 app.include_router(google_auth.router)
 app.include_router(teams.router)
 app.include_router(machine_learning.router)
+app.include_router(recommendations.router)
 
 # can make routers in the main, or use routers in the router folder
 @app.get("/")
