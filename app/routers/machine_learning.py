@@ -171,3 +171,17 @@ async def get_team_recommendation(team_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No recommendation found for the given team_id.",
         )
+
+## form data stored in ml collection for use later
+@router.post("/formSubmission")
+async def formSubmission(payload : dict):
+    # store all form data
+    result = insert_data("machine-learning", json.dumps(payload))
+    if result is Exception:
+        print(result)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="data could not be stored in the database.",
+        )
+    else: return {"The data was successfully stored"}
+    
