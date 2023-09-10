@@ -6,3 +6,4 @@ pydantic==1.10.9
 pymongo==4.3.3
 python-dotenv==1.0.0
 python_jose==3.3.0
+uvicorn[standard]
