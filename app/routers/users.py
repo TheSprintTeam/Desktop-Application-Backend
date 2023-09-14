@@ -198,3 +198,14 @@ async def delete_user(current_user: Annotated[UserBase, Depends(get_current_user
 @router.get("/teams")
 async def users_teams(all_users_teams: Annotated[AllTeamBase, Depends(get_user_teams)]):
     return all_users_teams
+
+# API Endpoint for Getting a User from UserID
+@router.get("/{user_id}")
+async def get_user_from_id(user_id: str):
+    user = find_one_data("users", {"_id": ObjectId(user_id)})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not find user's account based on their user id.",
+        )
+    return userResponseEntity(user)

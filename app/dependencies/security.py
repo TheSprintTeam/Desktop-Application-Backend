@@ -20,7 +20,7 @@ flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
     scopes=["https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", "openid"])
 
 # Indicate where the API server will redirect the user after the user completes the authorization flow.
-flow.redirect_uri = "http://localhost:8000/google-callback"
+flow.redirect_uri = "http://localhost:3000/sign-up"
 
 # Generate URL for request to Google's OAuth 2.0 server.
 authorization_url, state = flow.authorization_url(

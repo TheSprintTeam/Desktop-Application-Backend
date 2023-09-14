@@ -1,16 +1,13 @@
 from datetime import timedelta, datetime
 
 from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.requests import Request
+from fastapi.responses import RedirectResponse
 from fastapi.encoders import jsonable_encoder
 
 from ..config import ACCESS_TOKEN_EXPIRE_MINUTES, SWAP_TOKEN_ENDPOINT, GOOGLE_CLIENT_ID
 from ..helpers.user_helpers import authenticate_user_email, create_access_token
-from ..models.user import UserBase
-from ..models.token import Token
+from ..models.user import UserCreateGoogle
 from ..dependencies.security import authorization_url, flow
-from ..dependencies.google_auth_javascript import google_login_javascript_client
 from ..dependencies.database import users_collection
 from ..serializers.userSerializers import userResponseEntity
 
@@ -100,10 +97,10 @@ async def google_callback(code: str):
     # Add user to database if already doesn't exist
     user = authenticate_user_email(user_email)
     if user is None:
-        user_data = UserBase(
+        user_data = UserCreateGoogle(
             email = user_email.lower(),
-            first_name = id_info["given_name"],
-            last_name = id_info["family_name"],
+            first_name = id_info["name"],
+            last_name = "",
             created_at = datetime.utcnow(),
             updated_at = datetime.utcnow(),
             verified = True

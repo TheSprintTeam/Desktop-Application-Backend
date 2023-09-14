@@ -36,6 +36,9 @@ class UserCreate(UserBase):
     otp_code: str | None = None
     verified: bool | None = None
 
+class UserCreateGoogle(UserBase):
+    verified: bool | None = None
+
 # model for changing password
 class UserChangePass(BaseModel):
     old_password: str
